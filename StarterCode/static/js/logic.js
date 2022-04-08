@@ -1,6 +1,8 @@
 // Store our API endpoint as queryUrl.
 var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson";
 
+var geojson;
+
 // Perform a GET request to the query URL/
 d3.json(queryUrl).then(function (data) {
   // Once we get a response, send the data.features object to the createFeatures function.
@@ -16,27 +18,26 @@ function createFeatures(earthquakeData) {
   // Define a function that we want to run once for each feature in the features array.
   // Give each feature a popup that describes the place and time of the earthquake.
 function onEachFeature(feature, layer) {
-    layer.bindPopup(`<h3>Name: ${feature.properties.title}</h3><hr><p><h4>Magnitude: ${feature.properties.mag}</h4>`);
+    layer.bindPopup(`<h3>Name: ${feature.properties.title}</h3><hr><p><h4>Magnitude: ${feature.properties.mag}</h4><p><h4>Depth: ${feature.geometry.coordinates[2]}km</h4>`);
 }
 
 function style(feature){
-    var calculatedSize = (feature.properties.mag*3);
+    var calculatedSize = (feature.properties.mag*4);
     var adjustedColor;
     var depth = feature.geometry.coordinates[2];
     console.log(depth)
-        if (depth >100) adjustedColor = "red";
-        else if (depth >80) adjustedColor = "orange";
-        else if (depth >60) adjustedColor = "yellow";
+        if (depth >100) adjustedColor = "#4A148C";
+        else if (depth >80) adjustedColor = "#8E24AA";
+        else if (depth >60) adjustedColor = "blue";
         else if (depth >40) adjustedColor = "green";
-        else if (depth >20) adjustedColor = "blue";
-        else adjustedColor = "purple";
+        else if (depth >20) adjustedColor = "yellow";
+        else if (depth >0) adjustedColor = "orange";
+        else adjustedColor = "red";
 
     return {
-            fillOpacity: 0.75,
-            color: adjustedColor,
+            fillOpacity: 1,
+            color: "white",
             fillColor: adjustedColor,
-            // Setting our circle's radius to equal the output of our markerSize() function:
-            // This will make our marker's size proportionate to its population.
             radius: calculatedSize
         }
     }
@@ -117,32 +118,25 @@ function createMap(earthquakes) {
         collapsed: false
     }).addTo(myMap);
 
-//     // Set up the legend.
-//     var legend = L.control({ position: "bottomright" });
-//     legend.onAdd = function() {
-//     var div = L.DomUtil.create("div", "info legend");
-//     var limits = geojson.options.limits;
-//     var colors = geojson.options.colors;
-//     var labels = [];
 
-//     // Add the minimum and maximum.
-//     var legendInfo = "<h1>Median Income</h1>" +
-//     "<div class=\"labels\">" +
-//         "<div class=\"min\">" + limits[0] + "</div>" +
-//         "<div class=\"max\">" + limits[limits.length - 1] + "</div>" +
-//       "</div>";
+    var legend = L.control({ position: "bottomright" });
+    legend.onAdd = function(myMap) {
+        var div = L.DomUtil.create("div", "info legend");
+    
+    div.innerHTML += "<h4>Earthquake Depth (km)</h4>";
+    div.innerHTML += '<i style="background: #FF0000"></i><span>Above sea-level</span><br>';
+    div.innerHTML += '<i style="background: #FF5722"></i><span>0-19</span><br>';
+    div.innerHTML += '<i style="background: #FFEB3B"></i><span>20-39</span><br>';
+    div.innerHTML += '<i style="background: #4CAF50"></i><span>40-59</span><br>';
+    div.innerHTML += '<i style="background: #1E88E5"></i><span>60-79</span><br>';
+    div.innerHTML += '<i style="background: #8E24AA"></i><span>80-99</span><br>';
+    div.innerHTML += '<i style="background: #4A148C"></i><span>100+</span><br>';
+    
 
-//     div.innerHTML = legendInfo;
+  return div;
+};
 
-//     limits.forEach(function(limit, index) {
-//       labels.push("<li style=\"background-color: " + colors[index] + "\"></li>");
-//     });
-
-//     div.innerHTML += "<ul>" + labels.join("") + "</ul>";
-//     return div;
-//   };
-
-//   // Adding the legend to the map
-//   legend.addTo(myMap);
+// Adding the legend to the map
+    legend.addTo(myMap);
 
 }
