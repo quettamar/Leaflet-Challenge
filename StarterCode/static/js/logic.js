@@ -1,11 +1,15 @@
 // Store our API endpoint as queryUrl.
-var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson";
+var queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson";
 
 // Perform a GET request to the query URL/
 d3.json(queryUrl).then(function (data) {
   // Once we get a response, send the data.features object to the createFeatures function.
 createFeatures(data.features);
 });
+
+// function markerSize(magnitude) {
+//     return (magnitude) * 50;
+//   }
 
 function createFeatures(earthquakeData) {
 
@@ -14,6 +18,29 @@ function createFeatures(earthquakeData) {
 function onEachFeature(feature, layer) {
     layer.bindPopup(`<h3>Name: ${feature.properties.title}</h3><hr><p><h4>Magnitude: ${feature.properties.mag}</h4>`);
 }
+
+function style(feature){
+    var calculatedSize = (feature.properties.mag*3);
+    var adjustedColor;
+    var depth = feature.geometry.coordinates[2];
+    console.log(depth)
+        if (depth >100) adjustedColor = "red";
+        else if (depth >80) adjustedColor = "orange";
+        else if (depth >60) adjustedColor = "yellow";
+        else if (depth >40) adjustedColor = "green";
+        else if (depth >20) adjustedColor = "blue";
+        else adjustedColor = "purple";
+
+    return {
+            fillOpacity: 0.75,
+            color: adjustedColor,
+            fillColor: adjustedColor,
+            // Setting our circle's radius to equal the output of our markerSize() function:
+            // This will make our marker's size proportionate to its population.
+            radius: calculatedSize
+        }
+    }
+
 console.log(earthquakeData);
 // Create a GeoJSON layer that contains the features array on the earthquakeData object.
 // Run the onEachFeature function once for each piece of data in the array.
@@ -21,13 +48,8 @@ var earthquakes = L.geoJSON(earthquakeData, {
     onEachFeature: onEachFeature,
     pointToLayer: function(feature, latlong){
         return L.circleMarker(latlong);
-    },
-    style: {fillOpacity: 0.75,
-        color: "white",
-        fillColor: "purple",
-        // Setting our circle's radius to equal the output of our markerSize() function:
-        // This will make our marker's size proportionate to its population.
-        radius: 100}
+    }, 
+    style: style,
 });
 
 // Send our earthquakes layer to the createMap function/
@@ -95,32 +117,32 @@ function createMap(earthquakes) {
         collapsed: false
     }).addTo(myMap);
 
-    // Set up the legend.
-    var legend = L.control({ position: "bottomright" });
-    legend.onAdd = function() {
-    var div = L.DomUtil.create("div", "info legend");
-    var limits = geojson.options.limits;
-    var colors = geojson.options.colors;
-    var labels = [];
+//     // Set up the legend.
+//     var legend = L.control({ position: "bottomright" });
+//     legend.onAdd = function() {
+//     var div = L.DomUtil.create("div", "info legend");
+//     var limits = geojson.options.limits;
+//     var colors = geojson.options.colors;
+//     var labels = [];
 
-    // Add the minimum and maximum.
-    var legendInfo = "<h1>Median Income</h1>" +
-    "<div class=\"labels\">" +
-        "<div class=\"min\">" + limits[0] + "</div>" +
-        "<div class=\"max\">" + limits[limits.length - 1] + "</div>" +
-      "</div>";
+//     // Add the minimum and maximum.
+//     var legendInfo = "<h1>Median Income</h1>" +
+//     "<div class=\"labels\">" +
+//         "<div class=\"min\">" + limits[0] + "</div>" +
+//         "<div class=\"max\">" + limits[limits.length - 1] + "</div>" +
+//       "</div>";
 
-    div.innerHTML = legendInfo;
+//     div.innerHTML = legendInfo;
 
-    limits.forEach(function(limit, index) {
-      labels.push("<li style=\"background-color: " + colors[index] + "\"></li>");
-    });
+//     limits.forEach(function(limit, index) {
+//       labels.push("<li style=\"background-color: " + colors[index] + "\"></li>");
+//     });
 
-    div.innerHTML += "<ul>" + labels.join("") + "</ul>";
-    return div;
-  };
+//     div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+//     return div;
+//   };
 
-  // Adding the legend to the map
-  legend.addTo(myMap);
+//   // Adding the legend to the map
+//   legend.addTo(myMap);
 
 }
